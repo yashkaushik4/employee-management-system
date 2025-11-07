@@ -22,31 +22,7 @@ connectDB();
 
 // App
 const app = express();
-
-// ✅ Allow local + deployed frontend
-const allowedOrigins = [
-  process.env.CLIENT_URL,
-  "http://localhost:5173",
-];
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log("🚫 Blocked by CORS:", origin);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
-);
-
-app.options("*", cors()); // handle preflight
-
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -58,13 +34,9 @@ app.use("/api/leaves", leaveRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/attendance", attendanceRoutes);
 
-// ✅ Sync approved leaves to attendance on server start
-syncApprovedLeavesToAttendance()
-  .then(() => console.log("✅ Approved leaves synced to attendance"))
-  .catch((err) => console.error("❌ Error syncing leaves:", err));
+// ✅ Sync approved leaves into attendance on startup
+syncApprovedLeavesToAttendance();
 
-// Server start
+// Server listen
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
